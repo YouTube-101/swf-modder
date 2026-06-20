@@ -1,0 +1,88 @@
+* {
+    font-family: Nexa, sans-serif;
+    color: white;
+    margin: 0px;
+    line-height: 1.5;
+}
+code {
+    font-family: Consolas,monospace;
+}
+body {
+    background-color: #1a1a1a;
+    margin: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 20px;
+}
+#dropZone {
+    border: 2px dashed #555;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    width: calc(100% - 80px);
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#dropZone.dragging {
+    border-color: #00f;
+    background-color: rgba(0, 0, 255, 0.1);
+}
+#header {
+    background-color: #333;
+    padding: 5px;
+    height: 50px;
+    width: calc(100% - 50px);
+    border-radius: 10px;
+}
+#page {
+    height: calc(100vh - 130px);
+    width: calc(100vw - 40px);
+    display: flex;
+    gap: 20px;
+}
+#tags {
+    background-color: #333;
+    padding: 5px;
+    width: 300px;
+    height: calc(100% - 10px);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow-y: auto;
+}
+#tagdetails {
+    background-color: #333;
+    padding: 5px;
+    width: calc(100% - 310px);
+    height: calc(100% - 10px);
+    border-radius: 10px;
+    overflow-y: auto;
+}
+button {
+    background-color: #555;
+    border: 1px solid #777;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 10px;
+}
+#tags > button {
+    text-align: left;
+    background-color: rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+button:hover {
+    background-color: #666;
+}
+#tags > button:hover {
+    background-color: rgba(102,102,102, 0.1);
+}
+#tags > button.selected {
+    background-color: rgba(0, 0, 255, 0.1);
+}
