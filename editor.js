@@ -601,7 +601,7 @@ const startEditor = (name, swfData) => {
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n+1)
-                    c.innerText = i.toString();
+                    c.innerText = "\"" + i.toString() + "\"";
                     id("constp").children[3].children[1].appendChild(l);
                     id("constp").children[3].children[1].appendChild(c);
             });
