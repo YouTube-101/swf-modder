@@ -2,7 +2,7 @@ const id = (x) => document.getElementById(x);
 const cls = (x) => document.querySelectorAll("."+x);
 document.body.innerHTML = '<p>Loading...</p>';
 
-const preload = 'BigSurvey.swf';
+const preload = null;
 
 (async () => {
     if (preload) {
