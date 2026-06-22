@@ -308,7 +308,7 @@ const startEditor = (name, swfData) => {
                 result |= (byte & 0x7F) << shift;
                 shift += 7;
             } while ((byte & 0x80) && index < tag.data.length);
-            if (shift < 32 && (byte & 0x40)) {
+            if (shift < 32 && (byte & 0x40) && shift > 7) {
                 result |= (~0 << shift);
             }
             if (!lock) {
