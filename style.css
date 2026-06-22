@@ -86,3 +86,24 @@ button:hover {
 #tags > button.selected {
     background-color: rgba(0, 0, 255, 0.1);
 }
+#constp {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#constp > div {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    flex: 1 1 calc(25% - 20px);
+    min-width: 200px;
+}
+#constp > div > div {
+    display: grid;
+    gap: 0px 10px;
+    grid-template-columns: auto 1fr;
+}
+#constp > div > div > code:nth-child(odd) {
+    color: rgb(136, 255, 255);
+    text-align:right;
+}
