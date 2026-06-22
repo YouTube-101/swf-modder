@@ -273,8 +273,8 @@ const startEditor = (name, swfData) => {
             case 42: return { i: "dup" };
             case 43: return { i: "swap" };
             case 44: return { i: "pushstring", o: ["U30"], t: ["string"] };
-            case 45: return { i: "pushint", o: ["U30"], t: ["integer"] };
-            case 46: return { i: "pushuint", o: ["U30"], t: ["uinteger"] };
+            case 45: return { i: "pushint", o: ["U30"], t: ["int"] };
+            case 46: return { i: "pushuint", o: ["U30"], t: ["uint"] };
             case 47: return { i: "pushdouble", o: ["U30"], t: ["double"] };
             case 48: return { i: "pushscope" };
             case 49: return { i: "pushnamespace", o: ["U30"], t: ["namespace"] };
@@ -381,7 +381,9 @@ const startEditor = (name, swfData) => {
                 throw new Error("Unknown instruction type " + byte + " on body " + (i + 1) + " at " + tag.name);
         }
     }
-    function loadTagDetails(tag) {
+    async function loadTagDetails(tag) {
+        id('tagdetails').innerHTML = `<h2>Loading...</h2>`;
+        await new Promise(resolve => setTimeout(resolve, 10));
         let offset = 0;
         function readHex(len = 2) {
             let result = [];
@@ -621,7 +623,6 @@ const startEditor = (name, swfData) => {
             {
                 let count = readU30();
                 for (let i = 1; i < count; i++) {
-                    readHex(4);
                     cp.int.push(readS32());
                 }
                 if (cp.int.length > 1) cp.int.forEach((i, n) => {
@@ -816,15 +817,15 @@ const startEditor = (name, swfData) => {
                                 val: readU30(),
                                 kind: read8()
                             };
-                            if (opt.kind === 0x03) opt = { kind: "Int", val: cp.integer[opt.val] };
-                            else if (opt.kind === 0x04) opt = { kind: "UInt", val: cp.uinteger[opt.val] };
+                            if (opt.kind === 0x03) opt = { kind: "Int", val: cp.int[opt.val] };
+                            else if (opt.kind === 0x04) opt = { kind: "UInt", val: cp.uint[opt.val] };
                             else if (opt.kind === 0x06) opt = { kind: "Double", val: cp.double[opt.val] };
                             else if (opt.kind === 0x0B) opt = { kind: "True" };
                             else if (opt.kind === 0x0A) opt = { kind: "False" };
                             else if (opt.kind === 0x0C) opt = { kind: "Null" };
                             else if (opt.kind === 0x00) opt = { kind: "Undefined" };
                             else if ([0x08, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x05].includes(opt.kind)) {
-                                opt.val = cp.namespace[opt.val];
+                                opt.val = cp.namespace[opt.value];
                                 if (opt.kind === 0x08) opt.kind = "Namespace";
                                 else if (opt.kind === 0x16) opt.kind = "PackageNamespace";
                                 else if (opt.kind === 0x17) opt.kind = "PackageInternalNs";
@@ -967,6 +968,7 @@ const startEditor = (name, swfData) => {
             }
             const scripts = [];
             const sc = readU30();
+            console.log("Script Count: " + sc);
             // Read script definitions
             {
                 for (let i = 0; i < sc; i++) {
@@ -989,7 +991,7 @@ const startEditor = (name, swfData) => {
                             trait.slot_id = readU30();
                             trait.type_index = readU30();
                             trait.value_index = readU30();
-                            if (readU30() != 0) trait.value_kind = read8();
+                            if (trait.value_index != 0) trait.value_kind = read8();
                         }
                         else if (trait.type == "Method" || trait.type == "Getter" || trait.type == "Setter") {
                             trait.disp_id = readU30();
@@ -1013,6 +1015,7 @@ const startEditor = (name, swfData) => {
                     scripts.push(s);
                 }
             }
+            console.log(scripts);
             const bodies = [];
             const bc = readU30();
             // Read method bodies
@@ -1097,7 +1100,7 @@ const startEditor = (name, swfData) => {
                                 }
                             }
                             for (let j = 0; j < instruction.t.length; j++) {
-                                if (["string", "integer", "uinteger", "multiname", "namespace", "nsset"].includes(instruction.t[j])) {
+                                if (["string", "int", "uint", "multiname", "namespace", "nsset"].includes(instruction.t[j])) {
                                     instruction.o[j] = cp[instruction.t[j]][instruction.o[j]];
                                 }
                             }
