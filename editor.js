@@ -53,7 +53,6 @@ const startEditor = (name, swfData) => {
         const b1 = swfData[offset + 1];
         const b2 = swfData[offset + 2];
         let value = (b0) | (b1 << 8) | (b2 << 16);
-        // sign-extend 24 -> 32 bits
         if (value & 0x800000) value |= 0xFF000000;
         if (!lock) {
             offset += 3;
@@ -120,9 +119,7 @@ const startEditor = (name, swfData) => {
     }
     const bytesneeded = Math.ceil((5 + (displayRect.NBits * 4)) / 8);
     let displayrect = '';
-    for (let i = 0; i < bytesneeded; i++) {
-        displayrect += bin(read8());
-    }
+    for (let i = 0; i < bytesneeded; i++) displayrect += bin(read8());
     displayrect = displayrect.substring(5);
     displayRect.Xmin = parseInt(displayrect.substring(0, displayRect.NBits), 2);
     displayRect.Xmax = parseInt(displayrect.substring(displayRect.NBits, displayRect.NBits * 2), 2);
@@ -131,7 +128,6 @@ const startEditor = (name, swfData) => {
     swf.header.displayRect = displayRect;
     swf.header.frameRate = read16() / 256;
     swf.header.frameCount = read16();
-
     while (offset < swf.header.fileLength) {
         const taglib = {
             0: "End",
@@ -235,23 +231,157 @@ const startEditor = (name, swfData) => {
         }
         swf.tags.push(tag);
     }
-    console.log(swf);
-
-
-
-
-
-
-
-
-
-
-
-
-
+    function getInstruction(x) {
+        switch (x) {
+            case 2: return { i: "nop" };
+            case 3: return { i: "throw" };
+            case 4: return { i: "getsuper", o: ["U30"], t: ["multiname"] };
+            case 5: return { i: "setsuper", o: ["U30"], t: ["multiname"] };
+            case 6: return { i: "dxns", o: ["U30"], t: ["string"] };
+            case 7: return { i: "dxnslate" };
+            case 8: return { i: "kill", o: ["U30"], t: [null] };
+            case 9: return { i: "label" };
+            case 12: return { i: "ifnlt", o: ["S24"], t: [null] };
+            case 13: return { i: "ifnle", o: ["S24"], t: [null] };
+            case 14: return { i: "ifngt", o: ["S24"], t: [null] };
+            case 15: return { i: "ifnge", o: ["S24"], t: [null] };
+            case 16: return { i: "jump", o: ["S24"], t: [null] };
+            case 17: return { i: "iftrue", o: ["S24"], t: [null] };
+            case 18: return { i: "iffalse", o: ["S24"], t: [null] };
+            case 19: return { i: "ifeq", o: ["S24"], t: [null] };
+            case 20: return { i: "ifne", o: ["S24"], t: [null] };
+            case 21: return { i: "iflt", o: ["S24"], t: [null] };
+            case 22: return { i: "ifle", o: ["S24"], t: [null] };
+            case 23: return { i: "ifgt", o: ["S24"], t: [null] };
+            case 24: return { i: "ifge", o: ["S24"], t: [null] };
+            case 25: return { i: "ifstricteq", o: ["S24"], t: [null] };
+            case 26: return { i: "ifstrictne", o: ["S24"], t: [null] };
+            case 27: return { i: "lookupswitch", o: ["S24", "U30"], t: [null, null] };
+            case 28: return { i: "pushwith" };
+            case 29: return { i: "popscope" };
+            case 30: return { i: "nextname" };
+            case 31: return { i: "hasnext" };
+            case 32: return { i: "pushnull" };
+            case 33: return { i: "pushundefined" };
+            case 35: return { i: "nextvalue" };
+            case 36: return { i: "pushbyte", o: ["U8"], t: [null] };
+            case 37: return { i: "pushshort", o: ["U30"], t: [null] };
+            case 38: return { i: "pushtrue" };
+            case 39: return { i: "pushfalse" };
+            case 40: return { i: "pushnan" };
+            case 41: return { i: "pop" };
+            case 42: return { i: "dup" };
+            case 43: return { i: "swap" };
+            case 44: return { i: "pushstring", o: ["U30"], t: ["string"] };
+            case 45: return { i: "pushint", o: ["U30"], t: ["integer"] };
+            case 46: return { i: "pushuint", o: ["U30"], t: ["uinteger"] };
+            case 47: return { i: "pushdouble", o: ["U30"], t: ["double"] };
+            case 48: return { i: "pushscope" };
+            case 49: return { i: "pushnamespace", o: ["U30"], t: ["namespace"] };
+            case 50: return { i: "hasnext2", o: ["U30", "U30"], t: [null, null] };
+            case 64: return { i: "newfunction", o: ["U30"], t: [null] };
+            case 65: return { i: "call", o: ["U30"], t: [null] };
+            case 66: return { i: "construct", o: ["U30"], t: [null] };
+            case 67: return { i: "callmethod", o: ["U30", "U30"], t: [null, null] };
+            case 68: return { i: "callstatic", o: ["U30", "U30"], t: [null, null] };
+            case 69: return { i: "callsuper", o: ["U30", "U30"], t: ["multiname", null] };
+            case 70: return { i: "callproperty", o: ["U30", "U30"], t: ["multiname", null] };
+            case 71: return { i: "returnvoid" };
+            case 72: return { i: "returnvalue" };
+            case 73: return { i: "constructsuper", o: ["U30"], t: [null] };
+            case 74: return { i: "constructprop", o: ["U30", "U30"], t: ["multiname", null] };
+            case 76: return { i: "callproplex", o: ["U30", "U30"], t: ["multiname", null] };
+            case 78: return { i: "callsupervoid", o: ["U30", "U30"], t: ["multiname", null] };
+            case 79: return { i: "callpropvoid", o: ["U30", "U30"], t: ["multiname", null] };
+            case 83: return { i: "applytype", o: ["U30"], t: [null] };
+            case 85: return { i: "newobject", o: ["U30"], t: [null] };
+            case 86: return { i: "newarray", o: ["U30"], t: [null] };
+            case 87: return { i: "newactivation", t: [null] };
+            case 88: return { i: "newclass", o: ["U30"], t: [null] };
+            case 89: return { i: "getdescendants", o: ["U30"], t: ["multiname"] };
+            case 90: return { i: "newcatch", o: ["U30"], t: [null] };
+            case 93: return { i: "findpropstrict", o: ["U30"], t: ["multiname"] };
+            case 94: return { i: "findproperty", o: ["U30"], t: ["multiname"] };
+            case 96: return { i: "getlex", o: ["U30"], t: ["multiname"] };
+            case 97: return { i: "setproperty", o: ["U30"], t: ["multiname"] };
+            case 98: return { i: "getlocal", o: ["U30"], t: [null] };
+            case 99: return { i: "setlocal", o: ["U30"], t: [null] };
+            case 100: return { i: "getglobalscope" };
+            case 101: return { i: "getscopeobject", o: ["U30"], t: [null] };
+            case 102: return { i: "getproperty", o: ["U30"], t: ["multiname"] };
+            case 104: return { i: "initproperty", o: ["U30"], t: ["multiname"] };
+            case 106: return { i: "deleteproperty", o: ["U30"], t: ["multiname"] };
+            case 108: return { i: "getslot", o: ["U30"], t: [null] };
+            case 109: return { i: "setslot", o: ["U30"], t: [null] };
+            case 110: return { i: "getglobalslot", o: ["U30"], t: [null] };
+            case 111: return { i: "setglobalslot", o: ["U30"], t: [null] };
+            case 112: return { i: "convert_s" };
+            case 113: return { i: "esc_xelem" };
+            case 114: return { i: "esc_xattr" };
+            case 115: return { i: "convert_i" };
+            case 116: return { i: "convert_o" };
+            case 117: return { i: "convert_d" };
+            case 118: return { i: "convert_b" };
+            case 119: return { i: "convert_o" };
+            case 120: return { i: "checkfilter" };
+            case 128: return { i: "coerce", o: ["U30"], t: ["multiname"] };
+            case 130: return { i: "coerce_a" };
+            case 133: return { i: "coerce_s" };
+            case 134: return { i: "astype", o: ["U30"], t: ["multiname"] };
+            case 135: return { i: "astypelate" };
+            case 144: return { i: "negate" };
+            case 145: return { i: "increment" };
+            case 146: return { i: "inclocal", o: ["U30"], t: [null] };
+            case 147: return { i: "decrement" };
+            case 148: return { i: "declocal", o: ["U30"], t: [null] };
+            case 149: return { i: "typeof" };
+            case 150: return { i: "not" };
+            case 151: return { i: "bitnot" };
+            case 160: return { i: "add" };
+            case 161: return { i: "subtract" };
+            case 162: return { i: "multiply" };
+            case 163: return { i: "divide" };
+            case 164: return { i: "modulo" };
+            case 165: return { i: "lshift" };
+            case 166: return { i: "rshift" };
+            case 167: return { i: "urshift" };
+            case 168: return { i: "bitand" };
+            case 169: return { i: "bitor" };
+            case 170: return { i: "bitxor" };
+            case 171: return { i: "equals" };
+            case 172: return { i: "strictequals" };
+            case 173: return { i: "lessthan" };
+            case 174: return { i: "lessequals" };
+            case 175: return { i: "greaterthan" };
+            case 176: return { i: "greaterequals" };
+            case 177: return { i: "instanceof" };
+            case 178: return { i: "istype", o: ["U30"], t: ["multiname"] };
+            case 179: return { i: "istypelate" };
+            case 180: return { i: "in" };
+            case 192: return { i: "increment_i" };
+            case 193: return { i: "decrement_i" };
+            case 194: return { i: "inclocal_i", o: ["U30"], t: [null] };
+            case 195: return { i: "declocal_i", o: ["U30"], t: [null] };
+            case 196: return { i: "negate_i" };
+            case 197: return { i: "add_i" };
+            case 198: return { i: "subtract_i" };
+            case 199: return { i: "multiply_i" };
+            case 208: return { i: "getlocal0" };
+            case 209: return { i: "getlocal1" };
+            case 210: return { i: "getlocal2" };
+            case 211: return { i: "getlocal3" };
+            case 212: return { i: "setlocal0" };
+            case 213: return { i: "setlocal1" };
+            case 214: return { i: "setlocal2" };
+            case 215: return { i: "setlocal3" };
+            case 239: return { i: "debug", o: ["U8", "U30", "U8", "U30"], t: [null, "string", null, null] }
+            case 240: return { i: "debugline", o: ["U30"], t: [null] };
+            case 241: return { i: "debugfile", o: ["U30"], t: ["string"] };
+            default: return { i: "???" };
+                throw new Error("Unknown instruction type " + byte + " on body " + (i + 1) + " at " + tag.name);
+        }
+    }
     function loadTagDetails(tag) {
-        console.log(tag);
-
         let offset = 0;
         function readHex(len = 2) {
             let result = [];
@@ -291,7 +421,6 @@ const startEditor = (name, swfData) => {
             const b1 = tag.data[offset + 1];
             const b2 = tag.data[offset + 2];
             let value = (b0) | (b1 << 8) | (b2 << 16);
-            // sign-extend 24 -> 32 bits
             if (value & 0x800000) value |= 0xFF000000;
             if (!lock) {
                 offset += 3;
@@ -342,7 +471,6 @@ const startEditor = (name, swfData) => {
             return value;
         }
         let dv = new DataView(new Uint8Array(tag.data).buffer);
-
         if (tag.type === 'Header') {
             id('tagdetails').innerHTML = `
                 <h2>Header</h2>
@@ -437,8 +565,11 @@ const startEditor = (name, swfData) => {
                 <div id="abccode">
                     <h3>ABC Code</h3>
                     <p>Version: Minor ${read16()}, Major ${read16()}</p>
-                    <h4>Constant Pool</h4>
-                    <div id="constp">
+                    <div style="display: flex; align-items: center; gap: 10px;margin-bottom: 10px;">
+                        <h4>Constant Pool</h4>
+                        <button onclick="document.getElementById('constp').classList.toggle('hidden')">Show/Hide</button>
+                    </div>
+                    <div id="constp" class="sitem hidden">
                         <div>
                             <p>Integers</p>
                             <div></div>
@@ -468,18 +599,23 @@ const startEditor = (name, swfData) => {
                             <div></div>
                         </div>
                     </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h4>Methods</h4>
+                        <button onclick="document.getElementById('pcode').classList.toggle('hidden')">Show/Hide</button>
+                    </div>
+                    <div id="pcode" class="sitem">
+
+                    </div>
                 </div>
-                <p>Rest of the bytes:</p>
-                <code id="rawcode">${tag.data.map(byte => hex(byte)).join(' ')}</code>
             `;
             const cp = {
-                int: [],
-                uint: [],
-                double: [],
-                string: [],
-                namespace: [],
-                nsset: [],
-                multiname: []
+                int: [null],
+                uint: [null],
+                double: [null],
+                string: [null],
+                namespace: [null],
+                nsset: [null],
+                multiname: [null]
             };
             // Read constant pool
             {
@@ -488,7 +624,8 @@ const startEditor = (name, swfData) => {
                     readHex(4);
                     cp.int.push(readS32());
                 }
-                if (cp.int.length) cp.int.forEach((i, n) => {
+                if (cp.int.length > 1) cp.int.forEach((i, n) => {
+                    if (n === 0) return;
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n + 1)
@@ -500,7 +637,8 @@ const startEditor = (name, swfData) => {
 
                 count = readU30();
                 for (let i = 1; i < count; i++) { cp.uint.push(readU32()); }
-                if (cp.uint.length) cp.uint.forEach((i, n) => {
+                if (cp.uint.length > 1) cp.uint.forEach((i, n) => {
+                    if (n === 0) return;
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n + 1)
@@ -512,7 +650,8 @@ const startEditor = (name, swfData) => {
 
                 count = readU30();
                 for (let i = 1; i < count; i++) { cp.double.push(readD64()); }
-                if (cp.double.length) cp.double.forEach((i, n) => {
+                if (cp.double.length > 1) cp.double.forEach((i, n) => {
+                    if (n === 0) return;
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n + 1)
@@ -531,7 +670,8 @@ const startEditor = (name, swfData) => {
                     }
                     cp.string.push(string);
                 }
-                if (cp.string.length) cp.string.forEach((i, n) => {
+                if (cp.string.length > 1) cp.string.forEach((i, n) => {
+                    if (n === 0) return;
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n + 1)
@@ -546,13 +686,14 @@ const startEditor = (name, swfData) => {
                     const namespace = {
                         type: { 0x08: "Namespace", 0x16: "PackageNamespace", 0x17: "PackageInternalNs", 0x18: "ProtectedNamespace", 0x19: "ExplicitNamespace", 0x1A: "StaticProtectedNs", 0x05: "PrivateNamespace" }[read8()]
                     };
-                    if (namespace.type === undefined) namespace.type = "Unknown(" + hex(tag.data[offset - 1]) + ")";
+                    if (namespace.type === undefined) namespace.type = "Unknown(" + hex(tag.data[offset]) + ")";
                     namespace.name = readU30();
-                    if (namespace.name !== 0) namespace.name = cp.string[namespace.name - 1];
+                    if (namespace.name !== 0) namespace.name = cp.string[namespace.name];
                     else namespace.name = "";
                     cp.namespace.push(namespace);
                 }
-                if (cp.namespace.length) cp.namespace.forEach((i, n) => {
+                if (cp.namespace.length > 1) cp.namespace.forEach((i, n) => {
+                    if (n === 0) return;
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n + 1)
@@ -566,10 +707,11 @@ const startEditor = (name, swfData) => {
                 for (let i = 1; i < count; i++) {
                     const nc = readU30();
                     const ns = [];
-                    for (let j = 0; j < nc; j++) ns.push(cp.namespace[readU30() - 1]);
+                    for (let j = 0; j < nc; j++) ns.push(cp.namespace[readU30()]);
                     cp.nsset.push(ns);
                 }
-                if (cp.nsset.length) cp.nsset.forEach((i, n) => {
+                if (cp.nsset.length > 1) cp.nsset.forEach((i, n) => {
+                    if (n === 0) return;
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n + 1)
@@ -599,40 +741,41 @@ const startEditor = (name, swfData) => {
                     else multiname.type = "Unknown" + hex(multiname.type);
                     if (["QName", "QNameA"].includes(multiname.type)) {
                         multiname.namespace = readU30();
-                        multiname.namespace = multiname.namespace == 0 ? "*" : cp.namespace[multiname.namespace - 1];
+                        multiname.namespace = multiname.namespace == 0 ? "*" : cp.namespace[multiname.namespace];
                         multiname.name = readU30();
-                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
+                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name];
                     }
                     else if (["RTQName", "RTQNameA"].includes(multiname.type)) {
                         multiname.name = readU30();
-                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
+                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name];
                     }
                     else if (["Multiname", "MultinameA"].includes(multiname.type)) {
                         multiname.name = readU30();
-                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
+                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name];
                         multiname.nsset = readU30();
                         if (multiname.nsset !== 0) {
-                            multiname.nsset = cp.nsset[multiname.nsset - 1];
+                            multiname.nsset = cp.nsset[multiname.nsset];
                         }
                     }
                     else if (["MultinameL", "MultinameLA"].includes(multiname.type)) {
                         multiname.nsset = readU30();
                         if (multiname.nsset !== 0) {
-                            multiname.nsset = cp.nsset[multiname.nsset - 1];
+                            multiname.nsset = cp.nsset[multiname.nsset];
                         }
                     }
                     else if (["TypeName"].includes(multiname.type)) {
                         multiname.qname = readU30();
-                        multiname.qname = cp.multiname[multiname.qname - 1];
+                        multiname.qname = cp.multiname[multiname.qname];
                         const pcount = readU30();
                         multiname.params = [];
                         for (let j = 0; j < pcount; j++) {
-                            multiname.params.push(cp.multiname[readU30() - 1]);
+                            multiname.params.push(cp.multiname[readU30()]);
                         }
                     }
                     cp.multiname.push(multiname);
                 }
-                if (cp.multiname.length) cp.multiname.forEach((i, n) => {
+                if (cp.multiname.length > 1) cp.multiname.forEach((i, n) => {
+                    if (n === 0) return;
                     const l = document.createElement('code');
                     const c = document.createElement('code');
                     l.innerText = (n + 1)
@@ -642,16 +785,363 @@ const startEditor = (name, swfData) => {
                 });
                 else id("constp").children[6].children[1].innerHTML = "<code></code><code>None</code>";
             }
-
-
+            const methods = [];
+            const mc = readU30();
+            // Read method headers
             {
-                const mc = readU30();
+                for (let i = 0; i < mc; i++) {
+                    const pc = readU30();
+                    let method = {
+                        ret_type: cp.multiname[readU30()],
+                        params: [],
+                        flags: {}
+                    };
+                    for (let p = 0; p < pc; p++) {
+                        const ptype = readU30();
+                        method.params.push({type: ptype == 0 ? "*" : cp.multiname[ptype]});
+                    }
+                    method.name = cp.string[readU30()];
+                    let flag = read8();
+                    if (flag & 0x80) method.flags.hasParamNames = true;
+                    if (flag & 0x40) method.flags.setDxns = true;
+                    if (flag & 0x08) method.flags.hasOptional = true;
+                    if (flag & 0x04) method.flags.needRest = true;
+                    if (flag & 0x02) method.flags.needActivation = true;
+                    if (flag & 0x01) method.flags.needArguments = true;
+                    if (method.flags.hasOptional) {
+                        const oc = readU30();
+                        method.optionals = [];
+                        for (let p = 0; p < oc; p++) {
+                            let opt = {
+                                val: readU30(),
+                                kind: read8()
+                            };
+                            if (opt.kind === 0x03) opt = { kind: "Int", val: cp.integer[opt.val] };
+                            else if (opt.kind === 0x04) opt = { kind: "UInt", val: cp.uinteger[opt.val] };
+                            else if (opt.kind === 0x06) opt = { kind: "Double", val: cp.double[opt.val] };
+                            else if (opt.kind === 0x0B) opt = { kind: "True" };
+                            else if (opt.kind === 0x0A) opt = { kind: "False" };
+                            else if (opt.kind === 0x0C) opt = { kind: "Null" };
+                            else if (opt.kind === 0x00) opt = { kind: "Undefined" };
+                            else if ([0x08, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x05].includes(opt.kind)) {
+                                opt.val = cp.namespace[opt.val];
+                                if (opt.kind === 0x08) opt.kind = "Namespace";
+                                else if (opt.kind === 0x16) opt.kind = "PackageNamespace";
+                                else if (opt.kind === 0x17) opt.kind = "PackageInternalNs";
+                                else if (opt.kind === 0x18) opt.kind = "ProtectedNamespace";
+                                else if (opt.kind === 0x19) opt.kind = "ExplicitNamespace";
+                                else if (opt.kind === 0x1A) opt.kind = "StaticProtectedNs";
+                                else if (opt.kind === 0x05) opt.kind = "PrivateNamespace";
+                            }
+                            method.optionals.push(opt);
+                        }
+                    }
+                    if (method.flags.hasParamNames) {
+                        for (let p = 0; p < pc; p++) {
+                            method.params[p].name = cp.string[readU30()];
+                        }
+                    }
+                    methods.push(method);
+                }
             }
+            const metadata = [];
+            const tc = readU30();
+            // Read metadata
+            {
+                for (let i = 0; i < tc; i++) {
+                    let md = {
+                        name: cp.string[readU30()],
+                        values: []
+                    };
+                    const vc = readU30();
+                    for (let j = 0; j < vc; j++) md.values.push({ key: cp.string[readU30()] });
+                    for (let j = 0; j < vc; j++) md.values[j].value = cp.string[readU30()];
+                    metadata.push(md);
+                }
+            }
+            const classes = [];
+            const cc = readU30();
+            // Read class definitions
+            {
+                for (let i = 0; i < cc; i++) {
+                    const trc = {
+                        instance: {
+                            name: cp.string[readU30()],
+                            super_index: readU30(),
+                            flags: {},
+                            interfaces: [],
+                        },
+                        class: {}
+                    }
+                    const flag = read8();
+                    if (flag & 0x08) trc.instance.flags.ClassProtectedNs = true;
+                    if (flag & 0x04) trc.instance.flags.ClassInterface = true;
+                    if (flag & 0x02) trc.instance.flags.ClassSealed = true;
+                    if (flag & 0x01) trc.instance.flags.ClassFinal = true;
+                    if (trc.instance.flags.ClassProtectedNs) trc.instance.protectedNS = readU30();
+                    const ic = readU30();
+                    for (let j = 0; j < ic; j++) trc.instance.interfaces.push(readU30());
+                    trc.instance.iinit_index = readU30();
+                    const ttc = readU30();
+                    trc.instance.traits = [];
+                    for (let j = 0; j < ttc; j++) {
+                        const trait = {
+                            name: cp.string[readU30()],
+                            vector: parseInt(bin(read8(true)).substring(0, 4), 2),
+                            type: ["Slot", "Method", "Getter", "Setter", "Class", "Function", "Const"][parseInt(bin(read8()).substring(4), 2)]
+                        };
+                        trait.final = Boolean(trait.vector & 0x01);
+                        trait.override = Boolean(trait.vector & 0x02);
+                        trait.metadata = Boolean(trait.vector & 0x04);
+                        if (trait.type == "Slot" || trait.type == "Const") {
+                            trait.slot_id = readU30();
+                            trait.type_index = readU30();
+                            trait.value_index = readU30();
+                            if (trait.value_index != 0) trait.value_kind = read8();
+                        }
+                        else if (trait.type == "Method" || trait.type == "Getter" || trait.type == "Setter") {
+                            trait.disp_id = readU30();
+                            trait.method_info = readU30();
+                        }
+                        else if (trait.type == "Class") {
+                            trait.slot_id = readU30();
+                            trait.class_index = readU30();
+                        }
+                        else if (trait.type == "Function") {
+                            trait.slot_id = readU30();
+                            trait.function = readU30();
+                        }
+                        if (trait.metadata) {
+                            const mtc = readU30();
+                            trait.metadata = [];
+                            for (let mtd = 0; mtd < mtc; mtd++) {
+                                trait.metadata.push(readU30());
+                            }
+                        }
+                        trc.instance.traits.push(trait);
+                    }
 
 
+                    classes.push(trc);
+                }
+                for (let i = 0; i < cc; i++) {
+                    classes[i].class.cinit_index = readU30();
+                    const stc = readU30();
+                    classes[i].class.static_traits = [];
+                    for (let j = 0; j < stc; j++) {
+                        const trait = {};
+                        trait.name = cp.string[readU30()];
+                        trait.vector = parseInt(bin(read8(true)).substring(0, 4), 2);
+                        trait.type = ["Slot", "Method", "Getter", "Setter", "Class", "Function", "Const"][parseInt(bin(read8()).substring(4), 2)];
+                        trait.final = Boolean(trait.vector & 0x01);
+                        trait.override = Boolean(trait.vector & 0x02);
+                        trait.metadata = Boolean(trait.vector & 0x04);
+                        if (trait.type == "Slot" || trait.type == "Const") {
+                            trait.slot_id = readU30();
+                            trait.type_index = readU30();
+                            trait.value_index = readU30();
+                            if (trait.value_index != 0) trait.value_kind = read8();
+                        }
+                        else if (trait.type == "Method" || trait.type == "Getter" || trait.type == "Setter") {
+                            trait.disp_id = readU30();
+                            trait.method_info = readU30();
+                        }
+                        else if (trait.type == "Class") {
+                            trait.slot_id = readU30();
+                            trait.class_index = readU30();
+                        }
+                        else if (trait.type == "Function") {
+                            trait.slot_id = readU30();
+                            trait.function = readU30();
+                        }
+                        if (trait.metadata) {
+                            const mtc = readU30();
+                            trait.metadata = [];
+                            for (let mtd = 0; mtd < mtc; mtd++) {
+                                trait.metadata.push(readU30());
+                            }
+                        }
+                        classes[i].class.static_traits.push(trait);
+                    }
+                }
+            }
+            const scripts = [];
+            const sc = readU30();
+            // Read script definitions
+            {
+                for (let i = 0; i < sc; i++) {
+                    const s = {
+                        init_index: readU30(),
+                        traits: []
+                    };
+                    const trc = readU30();
+                    s.traits = [];
+                    for (let j = 0; j < trc; j++) {
+                        const trait = {
+                            name: cp.string[readU30()],
+                            vector: parseInt(bin(read8(true)).substring(0, 4), 2),
+                            type: ["Slot", "Method", "Getter", "Setter", "Class", "Function", "Const"][parseInt(bin(read8()).substring(4), 2)]
+                        };
+                        trait.final = Boolean(trait.vector & 0x01);
+                        trait.override = Boolean(trait.vector & 0x02);
+                        trait.metadata = Boolean(trait.vector & 0x04);
+                        if (trait.type == "Slot" || trait.type == "Const") {
+                            trait.slot_id = readU30();
+                            trait.type_index = readU30();
+                            trait.value_index = readU30();
+                            if (readU30() != 0) trait.value_kind = read8();
+                        }
+                        else if (trait.type == "Method" || trait.type == "Getter" || trait.type == "Setter") {
+                            trait.disp_id = readU30();
+                            trait.method_info = readU30();
+                        }
+                        else if (trait.type == "Class") {
+                            trait.slot_id = readU30();
+                            trait.class_index = readU30();
+                        }
+                        else if (trait.type == "Function") {
+                            trait.slot_id = readU30();
+                            trait.function = readU30();
+                        }
+                        if (trait.metadata) {
+                            const tmc = readU30();
+                            trait.metadata = [];
+                            for (let mtd = 0; mtd < tmc; mtd++) trait.metadata.push(readU30());
+                        }
+                        s.traits.push(trait);
+                    }
+                    scripts.push(s);
+                }
+            }
+            const bodies = [];
+            const bc = readU30();
+            // Read method bodies
+            {
+                for (let i = 0; i < bc; i++) {
+                    const body = {
+                        method_info: readU30(),
+                        max_stack: readU30(),
+                        max_regs: readU30(),
+                        init_scope_depth: readU30(),
+                        max_scope_depth: readU30(),
+                        codeBytes: [],
+                        exception: [],
+                        traits: []
+                    };
+                    const cs = readU30();
+                    const code = [];
+                    for (let j = 0; j < cs; j++) body.codeBytes.push(read8());
+                    const exc = readU30();
+                    for (let j = 0; j < exc; j++) body.exception.push({ from: readU30(), to: readU30(), target: readU30(), exc_type: readU30(), var_name: readU30() });
+                    const trc = readU30();
+                    for (let j = 0; j < trc; j++) {
+                        const trait = {
+                            name: cp.string[readU30()],
+                            vector: parseInt(bin(read8(true)).substring(0, 4), 2),
+                            type: ["Slot", "Method", "Getter", "Setter", "Class", "Function", "Const"][parseInt(bin(read8()).substring(4), 2)]
+                        };
+                        trait.final = Boolean(trait.vector & 0x01);
+                        trait.override = Boolean(trait.vector & 0x02);
+                        trait.metadata = Boolean(trait.vector & 0x04);
+                        if (trait.type == "Slot" || trait.type == "Const") {
+                            trait.slot_id = readU30();
+                            trait.type_index = readU30();
+                            trait.value_index = readU30();
+                            if (trait.value_index != 0) trait.value_kind = read8();
+                        }
+                        else if (trait.type == "Method" || trait.type == "Getter" || trait.type == "Setter") {
+                            trait.disp_id = readU30();
+                            trait.method_info = readU30();
+                        }
+                        else if (trait.type == "Class") {
+                            trait.slot_id = readU30();
+                            trait.class_index = readU30();
+                        }
+                        else if (trait.type == "Function") {
+                            trait.slot_id = readU30();
+                            trait.function = readU30();
+                        }
+                        if (trait.metadata) {
+                            const tmc = readU30();
+                            trait.metadata = [];
+                            for (let mtd = 0; mtd < tmc; mtd++) trait.metadata.push(readU30());
+                        }
+                        body.traits.push(trait);
+                    }
+                    bodies.push(body);
+                }
+            }
+            // Read method byte codes
+            {
+                for (let i = 0; i < bodies.length; i++) {
+                    const code = bodies[i].codeBytes;
+                    bodies[i].code = [];
+                    const actualtagdata = tag.data;
+                    tag.data = code;
+                    dv = new DataView(new Uint8Array(code).buffer);
+                    offset = 0;
+                    while (offset < code.length) {
+                        const instruction = getInstruction(read8());
+                        if (instruction.o) {
+                            for (let j = 0; j < instruction.o.length; j++) {
+                                if (instruction.o[j] === "U8") instruction.o[j] = read8();
+                                else if (instruction.o[j] == "U30" || instruction.o[j] == "S24") {
+                                    const type = instruction.o[j];
+                                    instruction.o[j] = (type == "U30") ? readU30() : ((type == "S24") ? readS24() : null);
+                                    if (instruction.i == "lookupswitch" && type == "U30") {
+                                        for (let k = -1; k < instruction.o[j]; k++) {
+                                            instruction.o.push("S24");
+                                            instruction.t.push(null);
+                                        }
+                                    }
+                                }
+                            }
+                            for (let j = 0; j < instruction.t.length; j++) {
+                                if (["string", "integer", "uinteger", "multiname", "namespace", "nsset"].includes(instruction.t[j])) {
+                                    instruction.o[j] = cp[instruction.t[j]][instruction.o[j]];
+                                }
+                            }
+                            delete instruction.t;
+                        }
+                        bodies[i].code.push(instruction);
+                    }
+                    delete bodies[i].codeBytes;
+                    methods[bodies[i].method_info].body = bodies[i];
+                    tag.data = actualtagdata;
+                }
+            }
+            methods.forEach((method, index) => {
+                const me = document.createElement('div');
+                me.innerHTML = `
+                    <code style="text-align: left;">${method.ret_type ? method.ret_type.name : "void"} ${method.name}(${method.params.map(p => p.type.name + " " + p.name).join(", ")})</code>
+                    <div></div>
+                `;
+                if (method.body) method.body.code.forEach((instruction, ix) => {
+                    const i = document.createElement('code');
+                    const o = document.createElement('code');
+                    i.innerText = ix + 1;
+                    o.innerText = instruction.i;
+                    if (instruction.o) {
+                        instruction.o.forEach(op => {
+                            if (typeof op === "string") op = "\"" + op + "\"";
+                            else if (typeof op === "object") {
+                                let string = op.type + (op.nsset ? ("(\"" + op.name + "\", [" + op.nsset.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "])") : (op.namespace ? "(" + op.namespace.type + "(\"" + op.namespace.name + "\")" : "") + ", \"" + (op.name || "") + "\")");
+                                op = string;
 
-            id("rawcode").innerText = tag.data.slice(offset).map(byte => hex(byte)).join(' ');
-            console.log(id("rawcode"));
+                            }
+                            o.innerText += " " + op;
+                        });
+                    }
+                    me.children[1].appendChild(i);
+                    me.children[1].appendChild(o);
+                });
+                else {
+                    const i = document.createElement('code');
+                    i.innerText = "No body provided";
+                    me.children[1].appendChild(i);
+                }
+                id("pcode").appendChild(me);
+            });
         }
         else {
             id('tagdetails').innerHTML = `
@@ -668,7 +1158,7 @@ const startEditor = (name, swfData) => {
         document.addEventListener('mousemove', resizeWidth);
         document.addEventListener('mouseup', stopResize);
     });
-    function resizeWidth(e) {if (e.clientX >= 250 && e.clientX <= 700) id("tags").style.width = e.clientX + 'px';}
+    function resizeWidth(e) { if (e.clientX >= 250 && e.clientX <= 700) id("tags").style.width = e.clientX + 'px'; }
     function stopResize() {
         document.removeEventListener('mousemove', resizeWidth);
         document.removeEventListener('mouseup', stopResize);
