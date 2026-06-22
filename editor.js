@@ -481,164 +481,172 @@ const startEditor = (name, swfData) => {
                 nsset: [],
                 multiname: []
             };
-            let count = readU30();
-            for (let i = 1; i < count; i++) {cp.int.push(readS32());}
-            count = readU30();
-            for (let i = 1; i < count; i++) {cp.uint.push(readU32());}
-            count = readU30();
-            for (let i = 1; i < count; i++) {cp.double.push(readD64());}
-            count = readU30();
-            for (let i = 1; i < count; i++) {
-                const sl = readU30();
-                let string = "";
-                for (let j = 0; j < sl; j++) {
-                    string += String.fromCharCode(read8());
+            // Read constant pool
+            {
+                let count = readU30();
+                for (let i = 1; i < count; i++) {
+                    readHex(4);
+                    cp.int.push(readS32());
                 }
-                cp.string.push(string);
-            }
-            count = readU30();
-            for (let i = 1; i < count; i++) {
-                const namespace = {
-                    type: {0x08:"Namespace",0x16:"PackageNamespace",0x17:"PackageInternalNs",0x18:"ProtectedNamespace",0x19:"ExplicitNamespace",0x1A:"StaticProtectedNs",0x05:"PrivateNamespace"}[read8()]
-                };
-                if (namespace.type === undefined) namespace.type = "Unknown(" + hex(tag.data[offset - 1]) + ")";
-                namespace.name = readU30();
-                if (namespace.name !== 0) namespace.name = cp.string[namespace.name - 1];
-                else namespace.name = "";
-                cp.namespace.push(namespace);
-            }
-            count = readU30();
-            for (let i = 1; i < count; i++) {
-                const nc = readU30();
-                const ns = [];
-                for (let j = 0; j < nc; j++) ns.push(cp.namespace[readU30()-1]);
-                cp.nsset.push(ns);
-            }
-            count = readU30();
-            for (let i = 1; i < count; i++) {
-                const multiname = {
-                    type: read8()
-                };
-                if (multiname.type == 0x07) multiname.type = "QName";
-                else if (multiname.type == 0x0D) multiname.type = "QNameA";
-                else if (multiname.type == 0x0F) multiname.type = "RTQName";
-                else if (multiname.type == 0x10) multiname.type = "RTQNameA";
-                else if (multiname.type == 0x11) multiname.type = "RTQNameL";
-                else if (multiname.type == 0x12) multiname.type = "RTQNameLA";
-                else if (multiname.type == 0x09) multiname.type = "Multiname";
-                else if (multiname.type == 0x0E) multiname.type = "MultinameA";
-                else if (multiname.type == 0x1B) multiname.type = "MultinameL";
-                else if (multiname.type == 0x1C) multiname.type = "MultinameLA";
-                else if (multiname.type == 0x1D) multiname.type = "TypeName";
-                else multiname.type = "Unknown" + hex(multiname.type);
-                if (["QName", "QNameA"].includes(multiname.type)) {
-                    multiname.namespace = readU30();
-                    multiname.namespace = multiname.namespace == 0 ? "*" : cp.namespace[multiname.namespace - 1];
-                    multiname.name = readU30();
-                    multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
-                }
-                else if (["RTQName", "RTQNameA"].includes(multiname.type)) {
-                    multiname.name = readU30();
-                    multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
-                }
-                else if (["Multiname", "MultinameA"].includes(multiname.type)) {
-                    multiname.name = readU30();
-                    multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
-                    multiname.nsset = readU30();
-                    if (multiname.nsset !== 0) {
-                        multiname.nsset = cp.nsset[multiname.nsset - 1];
+                if (cp.int.length) cp.int.forEach((i,n) => {
+                        const l = document.createElement('code');
+                        const c = document.createElement('code');
+                        l.innerText = (n+1)
+                        c.innerText = i.toString();
+                        id("constp").children[0].children[1].appendChild(l);
+                        id("constp").children[0].children[1].appendChild(c);
+                });
+                else id("constp").children[0].children[1].innerHTML = "<code></code><code>None</code>";
+                
+                count = readU30();
+                for (let i = 1; i < count; i++) {cp.uint.push(readU32());}
+                if (cp.uint.length) cp.uint.forEach((i,n) => {
+                        const l = document.createElement('code');
+                        const c = document.createElement('code');
+                        l.innerText = (n+1)
+                        c.innerText = i.toString();
+                        id("constp").children[1].children[1].appendChild(l);
+                        id("constp").children[1].children[1].appendChild(c);
+                });
+                else id("constp").children[1].children[1].innerHTML = "<code></code><code>None</code>";
+
+                count = readU30();
+                for (let i = 1; i < count; i++) {cp.double.push(readD64());}
+                if (cp.double.length) cp.double.forEach((i,n) => {
+                        const l = document.createElement('code');
+                        const c = document.createElement('code');
+                        l.innerText = (n+1)
+                        c.innerText = i.toString();
+                        id("constp").children[2].children[1].appendChild(l);
+                        id("constp").children[2].children[1].appendChild(c);
+                });
+                else id("constp").children[2].children[1].innerHTML = "<code></code><code>None</code>";
+
+                count = readU30();
+                for (let i = 1; i < count; i++) {
+                    const sl = readU30();
+                    let string = "";
+                    for (let j = 0; j < sl; j++) {
+                        string += String.fromCharCode(read8());
                     }
+                    cp.string.push(string);
                 }
-                else if (["MultinameL", "MultinameLA"].includes(multiname.type)) {
-                    multiname.nsset = readU30();
-                    if (multiname.nsset !== 0) {
-                        multiname.nsset = cp.nsset[multiname.nsset - 1];
+                if (cp.string.length) cp.string.forEach((i,n) => {
+                        const l = document.createElement('code');
+                        const c = document.createElement('code');
+                        l.innerText = (n+1)
+                        c.innerText = "\"" + i.toString() + "\"";
+                        id("constp").children[3].children[1].appendChild(l);
+                        id("constp").children[3].children[1].appendChild(c);
+                });
+                else id("constp").children[3].children[1].innerHTML = "<code></code><code>None</code>";
+
+                count = readU30();
+                for (let i = 1; i < count; i++) {
+                    const namespace = {
+                        type: {0x08:"Namespace",0x16:"PackageNamespace",0x17:"PackageInternalNs",0x18:"ProtectedNamespace",0x19:"ExplicitNamespace",0x1A:"StaticProtectedNs",0x05:"PrivateNamespace"}[read8()]
+                    };
+                    if (namespace.type === undefined) namespace.type = "Unknown(" + hex(tag.data[offset - 1]) + ")";
+                    namespace.name = readU30();
+                    if (namespace.name !== 0) namespace.name = cp.string[namespace.name - 1];
+                    else namespace.name = "";
+                    cp.namespace.push(namespace);
+                }
+                if (cp.namespace.length) cp.namespace.forEach((i,n) => {
+                        const l = document.createElement('code');
+                        const c = document.createElement('code');
+                        l.innerText = (n+1)
+                        c.innerText = i.type + "(\"" + i.name + "\")";
+                        id("constp").children[4].children[1].appendChild(l);
+                        id("constp").children[4].children[1].appendChild(c);
+                });
+                else id("constp").children[4].children[1].innerHTML = "<code></code><code>None</code>";
+
+                count = readU30();
+                for (let i = 1; i < count; i++) {
+                    const nc = readU30();
+                    const ns = [];
+                    for (let j = 0; j < nc; j++) ns.push(cp.namespace[readU30()-1]);
+                    cp.nsset.push(ns);
+                }
+                if (cp.nsset.length) cp.nsset.forEach((i,n) => {
+                        const l = document.createElement('code');
+                        const c = document.createElement('code');
+                        l.innerText = (n+1)
+                        c.innerText = "[" + i.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "]";
+                        id("constp").children[5].children[1].appendChild(l);
+                        id("constp").children[5].children[1].appendChild(c);
+                });
+                else id("constp").children[5].children[1].innerHTML = "<code></code><code>None</code>";
+
+
+                count = readU30();
+                for (let i = 1; i < count; i++) {
+                    const multiname = {
+                        type: read8()
+                    };
+                    if (multiname.type == 0x07) multiname.type = "QName";
+                    else if (multiname.type == 0x0D) multiname.type = "QNameA";
+                    else if (multiname.type == 0x0F) multiname.type = "RTQName";
+                    else if (multiname.type == 0x10) multiname.type = "RTQNameA";
+                    else if (multiname.type == 0x11) multiname.type = "RTQNameL";
+                    else if (multiname.type == 0x12) multiname.type = "RTQNameLA";
+                    else if (multiname.type == 0x09) multiname.type = "Multiname";
+                    else if (multiname.type == 0x0E) multiname.type = "MultinameA";
+                    else if (multiname.type == 0x1B) multiname.type = "MultinameL";
+                    else if (multiname.type == 0x1C) multiname.type = "MultinameLA";
+                    else if (multiname.type == 0x1D) multiname.type = "TypeName";
+                    else multiname.type = "Unknown" + hex(multiname.type);
+                    if (["QName", "QNameA"].includes(multiname.type)) {
+                        multiname.namespace = readU30();
+                        multiname.namespace = multiname.namespace == 0 ? "*" : cp.namespace[multiname.namespace - 1];
+                        multiname.name = readU30();
+                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
                     }
-                }
-                else if (["TypeName"].includes(multiname.type)) {
-                    multiname.qname = readU30();
-                    multiname.qname = cp.multinames[multiname.qname - 1];
-                    const pcount = readU30();
-                    multiname.params = [];
-                    for (let j = 0; j < pcount; j++) {
-                        multiname.params.push(cp.multinames[readU30() - 1]);
+                    else if (["RTQName", "RTQNameA"].includes(multiname.type)) {
+                        multiname.name = readU30();
+                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
                     }
+                    else if (["Multiname", "MultinameA"].includes(multiname.type)) {
+                        multiname.name = readU30();
+                        multiname.name = multiname.name == 0 ? "*" : cp.string[multiname.name - 1];
+                        multiname.nsset = readU30();
+                        if (multiname.nsset !== 0) {
+                            multiname.nsset = cp.nsset[multiname.nsset - 1];
+                        }
+                    }
+                    else if (["MultinameL", "MultinameLA"].includes(multiname.type)) {
+                        multiname.nsset = readU30();
+                        if (multiname.nsset !== 0) {
+                            multiname.nsset = cp.nsset[multiname.nsset - 1];
+                        }
+                    }
+                    else if (["TypeName"].includes(multiname.type)) {
+                        multiname.qname = readU30();
+                        multiname.qname = cp.multiname[multiname.qname - 1];
+                        const pcount = readU30();
+                        multiname.params = [];
+                        for (let j = 0; j < pcount; j++) {
+                            multiname.params.push(cp.multiname[readU30() - 1]);
+                        }
+                    }
+                    cp.multiname.push(multiname);
                 }
-                cp.multiname.push(multiname);
+                if (cp.multiname.length) cp.multiname.forEach((i,n) => {
+                        const l = document.createElement('code');
+                        const c = document.createElement('code');
+                        l.innerText = (n+1)
+                        c.innerText = i.type + (i.nsset ? ("(\""+i.name+"\", [" + i.nsset.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "])") : (i.namespace ? "(" + i.namespace.type + "(\"" + i.namespace.name + "\")" : "") + ", \"" + (i.name || "") + "\")");
+                        id("constp").children[6].children[1].appendChild(l);
+                        id("constp").children[6].children[1].appendChild(c);
+                });
+                else id("constp").children[6].children[1].innerHTML = "<code></code><code>None</code>";
             }
-
-            if (cp.int.length) cp.int.forEach((i,n) => {
-                    const l = document.createElement('code');
-                    const c = document.createElement('code');
-                    l.innerText = (n+1)
-                    c.innerText = i.toString();
-                    id("constp").children[0].children[1].appendChild(l);
-                    id("constp").children[0].children[1].appendChild(c);
-            });
-            else id("constp").children[0].children[1].innerHTML = "<code></code><code>None</code>";
-
-            if (cp.uint.length) cp.uint.forEach((i,n) => {
-                    const l = document.createElement('code');
-                    const c = document.createElement('code');
-                    l.innerText = (n+1)
-                    c.innerText = i.toString();
-                    id("constp").children[1].children[1].appendChild(l);
-                    id("constp").children[1].children[1].appendChild(c);
-            });
-            else id("constp").children[1].children[1].innerHTML = "<code></code><code>None</code>";
-
-            if (cp.double.length) cp.double.forEach((i,n) => {
-                    const l = document.createElement('code');
-                    const c = document.createElement('code');
-                    l.innerText = (n+1)
-                    c.innerText = i.toString();
-                    id("constp").children[2].children[1].appendChild(l);
-                    id("constp").children[2].children[1].appendChild(c);
-            });
-            else id("constp").children[2].children[1].innerHTML = "<code></code><code>None</code>";
-
-            if (cp.string.length) cp.string.forEach((i,n) => {
-                    const l = document.createElement('code');
-                    const c = document.createElement('code');
-                    l.innerText = (n+1)
-                    c.innerText = "\"" + i.toString() + "\"";
-                    id("constp").children[3].children[1].appendChild(l);
-                    id("constp").children[3].children[1].appendChild(c);
-            });
-            else id("constp").children[3].children[1].innerHTML = "<code></code><code>None</code>";
-
-            if (cp.namespace.length) cp.namespace.forEach((i,n) => {
-                    const l = document.createElement('code');
-                    const c = document.createElement('code');
-                    l.innerText = (n+1)
-                    c.innerText = i.type + "(\"" + i.name + "\")";
-                    id("constp").children[4].children[1].appendChild(l);
-                    id("constp").children[4].children[1].appendChild(c);
-            });
-            else id("constp").children[4].children[1].innerHTML = "<code></code><code>None</code>";
-
-            if (cp.nsset.length) cp.nsset.forEach((i,n) => {
-                    const l = document.createElement('code');
-                    const c = document.createElement('code');
-                    l.innerText = (n+1)
-                    c.innerText = "[" + i.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "]";
-                    id("constp").children[5].children[1].appendChild(l);
-                    id("constp").children[5].children[1].appendChild(c);
-            });
-            else id("constp").children[5].children[1].innerHTML = "<code></code><code>None</code>";
             
 
-            if (cp.multiname.length) cp.multiname.forEach((i,n) => {
-                    const l = document.createElement('code');
-                    const c = document.createElement('code');
-                    l.innerText = (n+1)
-                    c.innerText = i.type + (i.nsset ? ("(\""+i.name+"\", [" + i.nsset.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "])") : (i.namespace ? "(" + i.namespace.type + "(\"" + i.namespace.name + "\")" : "") + ", \"" + (i.name || "") + "\")");
-                    id("constp").children[6].children[1].appendChild(l);
-                    id("constp").children[6].children[1].appendChild(c);
-            });
-            else id("constp").children[6].children[1].innerHTML = "<code></code><code>None</code>";
-
-
+            {
+                const mc = readU30();
+            }
 
 
 
