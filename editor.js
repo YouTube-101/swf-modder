@@ -488,37 +488,37 @@ const startEditor = (name, swfData) => {
                     readHex(4);
                     cp.int.push(readS32());
                 }
-                if (cp.int.length) cp.int.forEach((i,n) => {
-                        const l = document.createElement('code');
-                        const c = document.createElement('code');
-                        l.innerText = (n+1)
-                        c.innerText = i.toString();
-                        id("constp").children[0].children[1].appendChild(l);
-                        id("constp").children[0].children[1].appendChild(c);
+                if (cp.int.length) cp.int.forEach((i, n) => {
+                    const l = document.createElement('code');
+                    const c = document.createElement('code');
+                    l.innerText = (n + 1)
+                    c.innerText = i.toString();
+                    id("constp").children[0].children[1].appendChild(l);
+                    id("constp").children[0].children[1].appendChild(c);
                 });
                 else id("constp").children[0].children[1].innerHTML = "<code></code><code>None</code>";
-                
+
                 count = readU30();
-                for (let i = 1; i < count; i++) {cp.uint.push(readU32());}
-                if (cp.uint.length) cp.uint.forEach((i,n) => {
-                        const l = document.createElement('code');
-                        const c = document.createElement('code');
-                        l.innerText = (n+1)
-                        c.innerText = i.toString();
-                        id("constp").children[1].children[1].appendChild(l);
-                        id("constp").children[1].children[1].appendChild(c);
+                for (let i = 1; i < count; i++) { cp.uint.push(readU32()); }
+                if (cp.uint.length) cp.uint.forEach((i, n) => {
+                    const l = document.createElement('code');
+                    const c = document.createElement('code');
+                    l.innerText = (n + 1)
+                    c.innerText = i.toString();
+                    id("constp").children[1].children[1].appendChild(l);
+                    id("constp").children[1].children[1].appendChild(c);
                 });
                 else id("constp").children[1].children[1].innerHTML = "<code></code><code>None</code>";
 
                 count = readU30();
-                for (let i = 1; i < count; i++) {cp.double.push(readD64());}
-                if (cp.double.length) cp.double.forEach((i,n) => {
-                        const l = document.createElement('code');
-                        const c = document.createElement('code');
-                        l.innerText = (n+1)
-                        c.innerText = i.toString();
-                        id("constp").children[2].children[1].appendChild(l);
-                        id("constp").children[2].children[1].appendChild(c);
+                for (let i = 1; i < count; i++) { cp.double.push(readD64()); }
+                if (cp.double.length) cp.double.forEach((i, n) => {
+                    const l = document.createElement('code');
+                    const c = document.createElement('code');
+                    l.innerText = (n + 1)
+                    c.innerText = i.toString();
+                    id("constp").children[2].children[1].appendChild(l);
+                    id("constp").children[2].children[1].appendChild(c);
                 });
                 else id("constp").children[2].children[1].innerHTML = "<code></code><code>None</code>";
 
@@ -531,20 +531,20 @@ const startEditor = (name, swfData) => {
                     }
                     cp.string.push(string);
                 }
-                if (cp.string.length) cp.string.forEach((i,n) => {
-                        const l = document.createElement('code');
-                        const c = document.createElement('code');
-                        l.innerText = (n+1)
-                        c.innerText = "\"" + i.toString() + "\"";
-                        id("constp").children[3].children[1].appendChild(l);
-                        id("constp").children[3].children[1].appendChild(c);
+                if (cp.string.length) cp.string.forEach((i, n) => {
+                    const l = document.createElement('code');
+                    const c = document.createElement('code');
+                    l.innerText = (n + 1)
+                    c.innerText = "\"" + i.toString() + "\"";
+                    id("constp").children[3].children[1].appendChild(l);
+                    id("constp").children[3].children[1].appendChild(c);
                 });
                 else id("constp").children[3].children[1].innerHTML = "<code></code><code>None</code>";
 
                 count = readU30();
                 for (let i = 1; i < count; i++) {
                     const namespace = {
-                        type: {0x08:"Namespace",0x16:"PackageNamespace",0x17:"PackageInternalNs",0x18:"ProtectedNamespace",0x19:"ExplicitNamespace",0x1A:"StaticProtectedNs",0x05:"PrivateNamespace"}[read8()]
+                        type: { 0x08: "Namespace", 0x16: "PackageNamespace", 0x17: "PackageInternalNs", 0x18: "ProtectedNamespace", 0x19: "ExplicitNamespace", 0x1A: "StaticProtectedNs", 0x05: "PrivateNamespace" }[read8()]
                     };
                     if (namespace.type === undefined) namespace.type = "Unknown(" + hex(tag.data[offset - 1]) + ")";
                     namespace.name = readU30();
@@ -552,13 +552,13 @@ const startEditor = (name, swfData) => {
                     else namespace.name = "";
                     cp.namespace.push(namespace);
                 }
-                if (cp.namespace.length) cp.namespace.forEach((i,n) => {
-                        const l = document.createElement('code');
-                        const c = document.createElement('code');
-                        l.innerText = (n+1)
-                        c.innerText = i.type + "(\"" + i.name + "\")";
-                        id("constp").children[4].children[1].appendChild(l);
-                        id("constp").children[4].children[1].appendChild(c);
+                if (cp.namespace.length) cp.namespace.forEach((i, n) => {
+                    const l = document.createElement('code');
+                    const c = document.createElement('code');
+                    l.innerText = (n + 1)
+                    c.innerText = i.type + "(\"" + i.name + "\")";
+                    id("constp").children[4].children[1].appendChild(l);
+                    id("constp").children[4].children[1].appendChild(c);
                 });
                 else id("constp").children[4].children[1].innerHTML = "<code></code><code>None</code>";
 
@@ -566,16 +566,16 @@ const startEditor = (name, swfData) => {
                 for (let i = 1; i < count; i++) {
                     const nc = readU30();
                     const ns = [];
-                    for (let j = 0; j < nc; j++) ns.push(cp.namespace[readU30()-1]);
+                    for (let j = 0; j < nc; j++) ns.push(cp.namespace[readU30() - 1]);
                     cp.nsset.push(ns);
                 }
-                if (cp.nsset.length) cp.nsset.forEach((i,n) => {
-                        const l = document.createElement('code');
-                        const c = document.createElement('code');
-                        l.innerText = (n+1)
-                        c.innerText = "[" + i.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "]";
-                        id("constp").children[5].children[1].appendChild(l);
-                        id("constp").children[5].children[1].appendChild(c);
+                if (cp.nsset.length) cp.nsset.forEach((i, n) => {
+                    const l = document.createElement('code');
+                    const c = document.createElement('code');
+                    l.innerText = (n + 1)
+                    c.innerText = "[" + i.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "]";
+                    id("constp").children[5].children[1].appendChild(l);
+                    id("constp").children[5].children[1].appendChild(c);
                 });
                 else id("constp").children[5].children[1].innerHTML = "<code></code><code>None</code>";
 
@@ -632,17 +632,17 @@ const startEditor = (name, swfData) => {
                     }
                     cp.multiname.push(multiname);
                 }
-                if (cp.multiname.length) cp.multiname.forEach((i,n) => {
-                        const l = document.createElement('code');
-                        const c = document.createElement('code');
-                        l.innerText = (n+1)
-                        c.innerText = i.type + (i.nsset ? ("(\""+i.name+"\", [" + i.nsset.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "])") : (i.namespace ? "(" + i.namespace.type + "(\"" + i.namespace.name + "\")" : "") + ", \"" + (i.name || "") + "\")");
-                        id("constp").children[6].children[1].appendChild(l);
-                        id("constp").children[6].children[1].appendChild(c);
+                if (cp.multiname.length) cp.multiname.forEach((i, n) => {
+                    const l = document.createElement('code');
+                    const c = document.createElement('code');
+                    l.innerText = (n + 1)
+                    c.innerText = i.type + (i.nsset ? ("(\"" + i.name + "\", [" + i.nsset.map(n => n.type + "(\"" + n.name + "\")").join(", ") + "])") : (i.namespace ? "(" + i.namespace.type + "(\"" + i.namespace.name + "\")" : "") + ", \"" + (i.name || "") + "\")");
+                    id("constp").children[6].children[1].appendChild(l);
+                    id("constp").children[6].children[1].appendChild(c);
                 });
                 else id("constp").children[6].children[1].innerHTML = "<code></code><code>None</code>";
             }
-            
+
 
             {
                 const mc = readU30();
@@ -662,7 +662,17 @@ const startEditor = (name, swfData) => {
             `;
         }
     }
-    document.body.innerHTML = '<div id="header"></div><div id="page"><div id="tags"></div><div id="tagdetails"></div></div>';
+    document.body.innerHTML = '<div id="header"></div><div id="page"><div id="tags"></div><div id="dragbar"></div><div id="tagdetails"></div></div>';
+    id("dragbar").addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        document.addEventListener('mousemove', resizeWidth);
+        document.addEventListener('mouseup', stopResize);
+    });
+    function resizeWidth(e) {if (e.clientX >= 250 && e.clientX <= 700) id("tags").style.width = e.clientX + 'px';}
+    function stopResize() {
+        document.removeEventListener('mousemove', resizeWidth);
+        document.removeEventListener('mouseup', stopResize);
+    }
     const hb = document.createElement('button');
     hb.innerHTML = '<h4>Header Data</h4><span></span>';
     hb.children[1].innerText = name;

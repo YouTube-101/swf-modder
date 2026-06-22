@@ -44,7 +44,7 @@ body {
     height: calc(100vh - 130px);
     width: calc(100vw - 40px);
     display: flex;
-    gap: 20px;
+    gap: 10px;
 }
 #tags {
     background-color: #333;
@@ -109,4 +109,14 @@ button:hover {
 #constp > div > div > code:nth-child(odd) {
     color: rgb(136, 255, 255);
     text-align:right;
+}
+#dragbar {
+  width: 6px;
+  background-color: #bdc3c7;
+  cursor: col-resize;
+  transition: background 0.2s;
+}
+
+#dragbar:hover, #dragbar:active {
+  background-color: #3498db;
 }
